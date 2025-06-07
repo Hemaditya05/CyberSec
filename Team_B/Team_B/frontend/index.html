@@ -1,0 +1,278 @@
+<!-- frontend/static/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Team B Control Panel</title>
+  <style>
+    body {
+      background: #f4f6f8;
+      color: #333;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      min-height: 100vh;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      margin: 2rem;
+      max-width: 600px;
+      width: 100%;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      text-align: center;
+      color: #2c3e50;
+    }
+    form label {
+      display: block;
+      margin-top: 1.5rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #555;
+    }
+    form .input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.4rem;
+    }
+    form input[type="number"],
+    form input[type="text"] {
+      flex: 1;
+      padding: 0.6rem;
+      border: 1px solid #ccd0d5;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      color: #333;
+    }
+    form input[type="number"]:focus,
+    form input[type="text"]:focus {
+      outline: none;
+      border-color: #5dade2;
+      box-shadow: 0 0 0 2px rgba(93, 173, 226, 0.3);
+    }
+    form button.save-button {
+      margin-top: 1.8rem;
+      background: #5dade2;
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    form button.save-button:hover {
+      background: #3498db;
+    }
+    .divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 2rem 0;
+      border: none;
+    }
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .actions button {
+      flex: 1;
+      padding: 0.7rem;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .actions button.start-a {
+      background: #27ae60;
+    }
+    .actions button.start-a:hover {
+      background: #219150;
+    }
+    .actions button.start-c {
+      background: #8e44ad;
+    }
+    .actions button.start-c:hover {
+      background: #733d9a;
+    }
+    .actions button.stop-all {
+      background: #e74c3c;
+    }
+    .actions button.stop-all:hover {
+      background: #c0392b;
+    }
+    .note {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      color: #666;
+      text-align: center;
+    }
+    .note code {
+      background: #f0f0f0;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: Consolas, Menlo, Monaco, monospace;
+    }
+    .scanner {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .scanner p {
+      font-size: 1.0rem;
+      color: #2c3e50;
+      margin: 0.5rem 0;
+    }
+    .scanner .port-found {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #27ae60;
+      margin-top: 0.5rem;
+    }
+    .scanner button.continue-btn {
+      margin-top: 1rem;
+      background: #3498db;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .scanner button.continue-btn:hover {
+      background: #2587c3;
+    }
+    .goto-dashboard {
+      margin-top: 1rem;
+      display: block;
+      background: #57606f;
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .goto-dashboard:hover {
+      background: #2f3542;
+    }
+    @media (max-width: 480px) {
+      .actions button {
+        flex: 100%;
+      }
+      form .input-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Team B Sniffer/Sender Control</h1>
+
+    <form method="POST" action="/">
+      <label>Port Range (min, max):
+        <div class="input-group">
+          <input type="number" name="port_min" value="{{ cfg['udp']['port_range'][0] }}" required />
+          <input type="number" name="port_max" value="{{ cfg['udp']['port_range'][1] }}" required />
+        </div>
+      </label>
+
+      <label>Keywords (comma-separated):
+        <div class="input-group">
+          <input type="text" name="keywords" value="{{ cfg['keywords']|join(',') }}" required />
+        </div>
+      </label>
+
+      <label>Sleep Interval (min, max in seconds):
+        <div class="input-group">
+          <input type="number" step="0.1" name="sleep_min" value="{{ cfg['sleep_interval'][0] }}" required />
+          <input type="number" step="0.1" name="sleep_max" value="{{ cfg['sleep_interval'][1] }}" required />
+        </div>
+      </label>
+
+      <button class="save-button" type="submit">💾 Save Config</button>
+    </form>
+
+    <hr class="divider" />
+
+    <div class="actions">
+      <button onclick="window.location='/start_a'" class="start-a">▶ Start Node A Sender</button>
+      <button id="start-c-btn" class="start-c">▶ Start Node C Sniffer</button>
+      <button onclick="window.location='/stop_all'" class="stop-all">■ Stop All</button>
+    </div>
+
+    <a href="/dashboard" class="goto-dashboard">→ Go to Dashboard</a>
+
+    <div class="note">
+      Node A sends from a <strong>random</strong> port in your range.<br />
+      Node C scans all UDP traffic to detect the active port.<br />
+      Once detected, click “Continue → Dashboard” or use “Go to Dashboard” directly.
+    </div>
+
+    <div class="scanner" id="scanner">
+      <p id="scan-status">Awaiting Sniffer to start…</p>
+      <p class="port-found" id="port-found" style="display: none;">Port Found: <span id="port-number"></span></p>
+      <button class="continue-btn" id="continue-btn" style="display: none;">Continue → Dashboard</button>
+    </div>
+  </div>
+
+  <script>
+    const startCButton = document.getElementById("start-c-btn");
+    const scanStatus    = document.getElementById("scan-status");
+    const portFoundElem = document.getElementById("port-found");
+    const portNumber    = document.getElementById("port-number");
+    const continueBtn   = document.getElementById("continue-btn");
+    let pollingInterval = null;
+
+    startCButton.addEventListener("click", async () => {
+      scanStatus.textContent = "Starting Sniffer…";
+      await fetch("/start_c");
+      setTimeout(startPollingPort, 500);
+    });
+
+    function startPollingPort() {
+      scanStatus.textContent = "Scanning for active port…";
+      pollingInterval = setInterval(async () => {
+        try {
+          const resp = await fetch("/get_active_port");
+          const text = await resp.text();
+          if (text && text.trim() !== "") {
+            clearInterval(pollingInterval);
+            const port = text.trim();
+            scanStatus.style.display = "none";
+            portNumber.textContent = port;
+            portFoundElem.style.display = "block";
+            continueBtn.style.display = "inline-block";
+          }
+        } catch (err) {
+          console.error("Error polling /get_active_port:", err);
+        }
+      }, 1000);
+    }
+
+    continueBtn.addEventListener("click", () => {
+      window.location = "/dashboard";
+    });
+  </script>
+</body>
+</html>
+

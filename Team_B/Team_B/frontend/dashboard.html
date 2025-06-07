@@ -1,0 +1,396 @@
+<!-- frontend/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Team B Dashboard</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-o68uC6+aIFS1vYyNCGNOk7u+vZDLU/E5Fk7xwo9uE+Q="
+    crossorigin=""
+  />
+  <style>
+    /* Reset & Base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Card Container */
+    .card {
+      background-color: #2b2b2b;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+      max-width: 900px;
+      width: 100%;
+      padding: 2rem;
+      overflow: auto;
+    }
+    h1 {
+      font-size: 2.2rem;
+      color: #ffffff;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Active Port */
+    .active-port {
+      font-size: 1.2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .active-port span {
+      font-weight: 600;
+      color: #4cd137;
+    }
+
+    /* Section Blocks */
+    .section {
+      margin-top: 2rem;
+    }
+    .section:first-of-type {
+      margin-top: 0;
+    }
+    .section h2 {
+      font-size: 1.4rem;
+      margin-bottom: 0.75rem;
+      color: #f5f5f5;
+      border-bottom: 1px solid #444;
+      padding-bottom: 0.4rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Live Logs Panel */
+    #live-logs {
+      background-color: #111;
+      color: #39ff14;
+      padding: 1rem;
+      border-radius: 4px;
+      height: 240px;
+      overflow-y: auto;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 0.85rem;
+      line-height: 1.3;
+      box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.7);
+    }
+    .chart-container {
+      position: relative;
+      height: 260px;
+      margin-top: 1.25rem;
+      background-color: #222;
+      border-radius: 4px;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
+      padding: 0.5rem;
+    }
+    #log-chart {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Geolocation Map */
+    #map {
+      height: 300px;
+      border-radius: 4px;
+      background: #333;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Buttons */
+    .action-btn {
+      background-color: #4cd137;
+      color: #1b1b1b;
+      border: none;
+      padding: 0.7rem 1.3rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+      transition: background-color 0.2s ease;
+    }
+    .action-btn:hover {
+      background-color: #3fb82d;
+    }
+    .stop-btn {
+      background-color: #e84118;
+      color: #f5f5f5;
+      border: none;
+      padding: 0.8rem 1.4rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 2rem;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
+      transition: background-color 0.2s ease;
+    }
+    .stop-btn:hover {
+      background-color: #cf3012;
+    }
+
+    /* Output Boxes */
+    .output-box {
+      background-color: #1f1f1f;
+      color: #e0e0e0;
+      padding: 1rem;
+      border-radius: 4px;
+      max-height: 260px;
+      overflow-y: auto;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin-top: 0.6rem;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      #live-logs {
+        height: 180px;
+      }
+      .chart-container {
+        height: 200px;
+      }
+      #map {
+        height: 200px;
+      }
+      .output-box {
+        max-height: 180px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Team B Dashboard</h1>
+    <div class="active-port">
+      Active Port: <span id="active-port-number">Loading…</span>
+    </div>
+
+    <div class="section">
+      <h2>Live Sniffer Logs</h2>
+      <pre id="live-logs">Loading logs…</pre>
+      <div class="chart-container">
+        <canvas id="log-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Geolocation Map</h2>
+      <div id="map">Loading map…</div>
+    </div>
+
+    <div class="section">
+      <h2>Pattern Analyzer</h2>
+      <button id="run-pattern-btn" class="action-btn">▶ Run Pattern Analyzer</button>
+      <div id="pattern-output" class="output-box" style="display: none;"></div>
+    </div>
+
+    <div class="section">
+      <h2>Generate Report</h2>
+      <button id="run-report-btn" class="action-btn">▶ Generate Report</button>
+      <div id="report-output" class="output-box" style="display: none;"></div>
+    </div>
+
+    <div class="section">
+      <h2>Playback</h2>
+      <button id="run-playback-btn" class="action-btn">▶ Run Playback</button>
+      <div id="playback-output" class="output-box" style="display: none;"></div>
+    </div>
+
+    <button id="stop-all-btn" class="stop-btn">■ Stop All Nodes &amp; Return</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o8N5AExeK7I+d2M6YwQkcD3QlxlSbb/dfPP1p3dPJ1o="
+    crossorigin=""
+  ></script>
+  <script>
+    async function fetchActivePort() {
+      try {
+        const resp = await fetch("/get_active_port");
+        const port = await resp.text();
+        document.getElementById("active-port-number").textContent =
+          port.trim() === "" ? "None" : port.trim();
+      } catch (err) {
+        console.error("Error fetching active port:", err);
+      }
+    }
+
+    let logChart;
+    function initChart() {
+      const ctx = document.getElementById("log-chart").getContext("2d");
+      logChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [{
+            label: "Packet Count",
+            backgroundColor: "rgba(76, 209, 55, 0.4)",
+            borderColor: "rgba(76, 209, 55, 1)",
+            borderWidth: 2,
+            fill: true,
+            data: []
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { display: false },
+            y: {
+              beginAtZero: true,
+              grid: { color: "#444" }
+            }
+          },
+          plugins: {
+            legend: { labels: { color: "#eee" } }
+          }
+        }
+      });
+    }
+
+    function fetchLogs() {
+      fetch("/get_logs")
+        .then(r => r.text())
+        .then(text => {
+          const el = document.getElementById("live-logs");
+          el.textContent = text || "No logs yet.";
+          el.scrollTop = el.scrollHeight;
+
+          const lines = text.trim().split("\n").filter(l => l);
+          const count = lines.length;
+          const labels = logChart.data.labels;
+          const data = logChart.data.datasets[0].data;
+          const now = new Date().toLocaleTimeString();
+
+          labels.push(now);
+          data.push(count);
+          if (labels.length > 20) {
+            labels.shift();
+            data.shift();
+          }
+          logChart.update();
+        })
+        .catch(err => console.error("Error fetching logs:", err));
+    }
+
+    let map;
+    function initMap() {
+      map = L.map("map").setView([17.5, 78.0], 8);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 500);
+      fetchGeoLogs();
+    }
+
+    function fetchGeoLogs() {
+      fetch("/get_geo_logs")
+        .then(r => r.json())
+        .then(arr => {
+          map.eachLayer(layer => {
+            if (layer instanceof L.CircleMarker) {
+              map.removeLayer(layer);
+            }
+          });
+          arr.forEach(pt => {
+            L.circleMarker([pt.lat, pt.lng], {
+              radius: 6,
+              color: "#e84118",
+              fillColor: "#e84118",
+              fillOpacity: 0.8,
+              weight: 1
+            }).addTo(map);
+          });
+        })
+        .catch(err => console.error("Error fetching geo logs:", err));
+    }
+
+    document.getElementById("run-pattern-btn").addEventListener("click", () => {
+      const outBox = document.getElementById("pattern-output");
+      outBox.style.display = "block";
+      outBox.textContent = "Running Pattern Analyzer…";
+      fetch("/run_pattern")
+        .then(r => r.text())
+        .then(text => {
+          outBox.textContent = text || "No output.";
+          outBox.scrollTop = outBox.scrollHeight;
+        })
+        .catch(err => {
+          outBox.textContent = "Error running pattern_analyzer.py";
+          console.error(err);
+        });
+    });
+
+    document.getElementById("run-report-btn").addEventListener("click", () => {
+      const outBox = document.getElementById("report-output");
+      outBox.style.display = "block";
+      outBox.textContent = "Generating report…";
+      fetch("/run_report")
+        .then(r => r.text())
+        .then(text => {
+          outBox.textContent = text || "No output.";
+          outBox.scrollTop = outBox.scrollHeight;
+        })
+        .catch(err => {
+          outBox.textContent = "Error running generate_report.py";
+          console.error(err);
+        });
+    });
+
+    document.getElementById("run-playback-btn").addEventListener("click", () => {
+      const outBox = document.getElementById("playback-output");
+      outBox.style.display = "block";
+      outBox.textContent = "Starting playback…";
+      fetch("/run_playback")
+        .then(r => r.text())
+        .then(text => {
+          outBox.textContent = text || "No output.";
+          outBox.scrollTop = outBox.scrollHeight;
+        })
+        .catch(err => {
+          outBox.textContent = "Error running playback.py";
+          console.error(err);
+        });
+    });
+
+    document.getElementById("stop-all-btn").addEventListener("click", () => {
+      fetch("/stop_all").then(() => {
+        window.location = "/";
+      });
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      fetchActivePort();
+      initChart();
+      fetchLogs();
+      setInterval(fetchLogs, 2000);
+      initMap();
+      setInterval(fetchGeoLogs, 5000);
+    });
+  </script>
+</body>
+</html>
+
